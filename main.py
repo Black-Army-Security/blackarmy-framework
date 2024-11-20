@@ -1,7 +1,6 @@
 import os
 from art.ascii_art import print_ascii_art
 
-# Importação das funções de comando a partir do diretório 'commands'
 from commands.exit import exit_program
 from commands.clear import clear_screen
 from commands.help import show_help
@@ -14,14 +13,12 @@ def parse_arguments(command):
     return command.split()
 
 def main():
-    # Dicionário de comandos que mapeia os nomes para as funções
     commands = {
         "help": show_help,
         "clear": clear_screen,
         "exit": exit_program
     }
 
-    # Exibe o ASCII Art ao iniciar
     print_ascii_art()
 
     while True:
