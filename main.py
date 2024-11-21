@@ -1,6 +1,8 @@
 import os
+# Import ascii art
 from art.ascii_art import print_ascii_art
 
+# Import commands
 from commands.exit import exit_program
 from commands.clear import clear_screen
 from commands.help import show_help
