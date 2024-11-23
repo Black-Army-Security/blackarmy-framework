@@ -25,22 +25,25 @@ def main():
 
     while True:
         show_prompt()
-        command = input()
+        command = input().strip()
         args = parse_arguments(command)
 
         if not args:
             continue
 
-        if args[0] == "discover" and len(args) >= 4:
-            domain = args[1]
-            wordlist = args[3]
-            discover(domain, wordlist)
+        if args[0] == "discover":
+            if len(args) == 4 and args[2] == "-w":
+                domain = args[1]
+                wordlist = args[3]
+                discover(domain, wordlist)
+            else:
+                print("Incorrect command. Usage: discover domain.com -w /path/to/wordlist.txt")
         elif args[0] in commands:
             commands[args[0]]()
             if args[0] == "exit":
                 break
-        elif command:
-            os.system(command)
+        else:
+            print(f"Unknown command: {command}")
 
 if __name__ == "__main__":
     main()
