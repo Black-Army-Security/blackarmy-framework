@@ -3,10 +3,8 @@ import os
 import sys
 import random
 import string
-from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, Text, TIMESTAMP
-from sqlalchemy.orm import declarative_base
-from sqlalchemy.orm import sessionmaker, relationship
-from sqlalchemy.sql import text
+from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, Text, TIMESTAMP, Enum
+from sqlalchemy.orm import declarative_base, sessionmaker, relationship
 
 # Path to save configuration files
 config_path = '/usr/share/blackarmy-framework/config'
@@ -14,6 +12,7 @@ database_config_file = os.path.join(config_path, 'database.yml')
 
 Base = declarative_base()
 
+# Check if the script is run with administrative privileges
 if os.geteuid() != 0:
     print("""
 [ERROR] Permission Denied!
@@ -26,7 +25,7 @@ If you believe this is an error, ensure you have the correct permissions.
 """)
     sys.exit(1)
 
-# Check if the path exists
+# Check if the configuration path exists
 if os.path.exists(config_path):
     print(f"Path '{config_path}' already exists.")
 else:
@@ -38,13 +37,12 @@ else:
     except Exception as e:
         print(f"Error creating path '{config_path}': {e}")
 
-
 # Function to generate a random password
 def generate_random_password(length=24):
     characters = string.ascii_letters + string.digits
     return ''.join(random.choice(characters) for i in range(length))
 
-# Unified function to handle database setup and initialization
+# Function to handle database setup and initialization
 def setup_database(new_user, new_db, verbose=False):
     try:
         new_password = generate_random_password()
@@ -55,7 +53,7 @@ def setup_database(new_user, new_db, verbose=False):
         create_user_sql = f"CREATE ROLE {new_user} WITH LOGIN PASSWORD '{new_password}';"
         create_db_sql = f"CREATE DATABASE {new_db} OWNER {new_user};"
 
-        # Suppress output of the subprocess commands
+        # Execute the commands
         subprocess.run(['sudo', '-u', 'postgres', 'psql', '-c', create_user_sql], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         subprocess.run(['sudo', '-u', 'postgres', 'psql', '-c', create_db_sql], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
@@ -74,7 +72,7 @@ def setup_database(new_user, new_db, verbose=False):
         print(f"Error: {e}")
         raise
 
-# Save database configurations to YAML
+# Save database configurations to a YAML file
 def save_to_yaml(file_path, configs):
     try:
         with open(file_path, 'w') as file:
@@ -83,7 +81,7 @@ def save_to_yaml(file_path, configs):
     except Exception as e:
         print(f"Error saving configurations to '{file_path}': {e}")
 
-# Define the tables
+# Define database tables
 class Target(Base):
     __tablename__ = 'targets'
     id = Column(Integer, primary_key=True)
@@ -134,7 +132,18 @@ class Vulnerability(Base):
 
 Service.vulnerabilities = relationship('Vulnerability', order_by=Vulnerability.id, back_populates='service')
 
-# Create the tables in the database
+# Define the DnsRecord table
+class DnsRecord(Base):
+    __tablename__ = 'dns_records'
+    id = Column(Integer, primary_key=True)
+    target_id = Column(Integer, ForeignKey('targets.id'))
+    record_type = Column(Enum('A', 'CNAME', 'NS', 'MX', 'TXT', 'SOA', 'SRV', 'PTR', 'AAAA', name='dns_record_types'), nullable=False)
+    value = Column(String(255), nullable=False)
+    target = relationship('Target', back_populates='dns_records')
+
+Target.dns_records = relationship('DnsRecord', order_by=DnsRecord.id, back_populates='target')
+
+# Create all tables in the database
 def create_tables(engine):
     try:
         Base.metadata.create_all(engine)
@@ -142,7 +151,7 @@ def create_tables(engine):
     except Exception as e:
         print(f"Error creating tables: {e}")
 
-# When executed directly
+# Main script execution
 if __name__ == "__main__":
     databases = [
         ('blackarmy', 'blackarmydb'),
