@@ -1,11 +1,18 @@
 import os
-import subprocess
 
 def discover(domain, wordlist):
+    if not domain or not wordlist:
+        print("Error: Missing arguments for 'discover'. Usage: discover domain.com -w /path/to/wordlist.txt")
+        return
+
+    if not os.path.isfile(wordlist):
+        print(f"Error: Wordlist file '{wordlist}' not found.")
+        return
+
     output_file = f"/var/tmp/{domain}.txt"
     command = f"gobuster dns -d {domain} -w {wordlist} > /var/tmp/raw_output.txt"
 
-    print(f"Running DNS enum: {command}")
+    print(f"Running DNS enumeration for domain: {domain}")
     os.system(command)
 
     try:
@@ -48,7 +55,7 @@ def discover(domain, wordlist):
                     print(f"Error: Could not open nslookup output file for {subdomain}")
                     continue
 
-        print(f"DNS enumeration and IP resolution complete. Results saved to {output_file}")
+        print(f"DNS enumeration and IP resolution completed. Results saved to {output_file}")
 
     except FileNotFoundError:
         print("Error: Could not open raw output file.")
