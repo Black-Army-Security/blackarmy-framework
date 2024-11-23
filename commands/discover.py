@@ -10,10 +10,11 @@ def discover(domain, wordlist):
         return
 
     output_file = f"/var/tmp/{domain}.txt"
-    command = f"gobuster dns -d {domain} -w {wordlist} > /var/tmp/raw_output.txt"
+    subdomain_enum = f"gobuster dns -d {domain} -w {wordlist} > /var/tmp/raw_output.txt"
+    dns_regs_enum = f"amass enum -d {domain}"
 
-    print(f"Running DNS enumeration for domain: {domain}")
-    os.system(command)
+    print(f"Running Subdomain enumeration for domain: {domain}")
+    os.system(subdomain_enum)
 
     try:
         with open("/var/tmp/raw_output.txt", "r") as raw_output:
@@ -56,6 +57,9 @@ def discover(domain, wordlist):
                     continue
 
         print(f"DNS enumeration and IP resolution completed. Results saved to {output_file}")
+
+        print(f"Running DNS enumeration for domain: {domain}")
+        os.system(dns_regs_enum)
 
     except FileNotFoundError:
         print("Error: Could not open raw output file.")
