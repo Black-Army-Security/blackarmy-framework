@@ -1,65 +1,83 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Text, Enum
-from sqlalchemy.orm import relationship
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import Session
+from .models import Target, Subdomain, Port, Service, Vulnerability
 
-Base = declarative_base()
+# CRUD para Target
+def create_target(db: Session, domain: str, ip: str):
+    target = Target(domain=domain, ip=ip)
+    db.add(target)
+    db.commit()
+    db.refresh(target)
+    return target
 
-class Target(Base):
-    __tablename__ = 'targets'
-    id = Column(Integer, primary_key=True)
-    domain = Column(String(255), nullable=False)
-    ip = Column(String(255))
-    os = Column(String(255))
-    waf = Column(String(255))
-    subdomains = relationship('Subdomain', back_populates='target')
-    dns_records = relationship('DnsRecord', back_populates='target')
+def get_target_by_id(db: Session, target_id: int):
+    return db.query(Target).filter(Target.id == target_id).first()
 
+def get_all_targets(db: Session):
+    return db.query(Target).all()
 
-class Subdomain(Base):
-    __tablename__ = 'subdomains'
-    id = Column(Integer, primary_key=True)
-    target_id = Column(Integer, ForeignKey('targets.id'))
-    subdomain = Column(String(255), nullable=False)
-    ip = Column(String(255))
-    target = relationship('Target', back_populates='subdomains')
-    ports = relationship('Port', back_populates='subdomain')
+def update_target(db: Session, target_id: int, domain: str = None, ip: str = None):
+    target = db.query(Target).filter(Target.id == target_id).first()
+    if target:
+        if domain:
+            target.domain = domain
+        if ip:
+            target.ip = ip
+        db.commit()
+        db.refresh(target)
+    return target
 
+def delete_target(db: Session, target_id: int):
+    target = db.query(Target).filter(Target.id == target_id).first()
+    if target:
+        db.delete(target)
+        db.commit()
 
-class Port(Base):
-    __tablename__ = 'ports'
-    id = Column(Integer, primary_key=True)
-    subdomain_id = Column(Integer, ForeignKey('subdomains.id'))
-    port = Column(Integer, nullable=False)
-    protocol = Column(String(10), nullable=False)
-    state = Column(String(10), nullable=False)
-    subdomain = relationship('Subdomain', back_populates='ports')
-    services = relationship('Service', back_populates='port')
+# CRUD para Subdomain
+def create_subdomain(db: Session, target_id: int, name: str):
+    subdomain = Subdomain(target_id=target_id, name=name)
+    db.add(subdomain)
+    db.commit()
+    db.refresh(subdomain)
+    return subdomain
 
+def get_subdomains_by_target(db: Session, target_id: int):
+    return db.query(Subdomain).filter(Subdomain.target_id == target_id).all()
 
-class Service(Base):
-    __tablename__ = 'services'
-    id = Column(Integer, primary_key=True)
-    port_id = Column(Integer, ForeignKey('ports.id'))
-    service_name = Column(String(255), nullable=False)
-    version = Column(String(255))
-    port = relationship('Port', back_populates='services')
-    vulnerabilities = relationship('Vulnerability', back_populates='service')
+# CRUD para Port
+def create_port(db: Session, target_id: int, number: int, status: str):
+    port = Port(target_id=target_id, number=number, status=status)
+    db.add(port)
+    db.commit()
+    db.refresh(port)
+    return port
 
+def get_ports_by_target(db: Session, target_id: int):
+    return db.query(Port).filter(Port.target_id == target_id).all()
 
-class Vulnerability(Base):
-    __tablename__ = 'vulnerabilities'
-    id = Column(Integer, primary_key=True)
-    service_id = Column(Integer, ForeignKey('services.id'))
-    vulnerability = Column(Text, nullable=False)
-    severity = Column(String(50))
-    cve_id = Column(String(50))
-    service = relationship('Service', back_populates='vulnerabilities')
+# CRUD para Service
+def create_service(db: Session, port_id: int, name: str, version: str):
+    service = Service(port_id=port_id, name=name, version=version)
+    db.add(service)
+    db.commit()
+    db.refresh(service)
+    return service
 
+def get_services_by_port(db: Session, port_id: int):
+    return db.query(Service).filter(Service.port_id == port_id).all()
 
-class DnsRecord(Base):
-    __tablename__ = 'dns_records'
-    id = Column(Integer, primary_key=True)
-    target_id = Column(Integer, ForeignKey('targets.id'))
-    record_type = Column(Enum('A', 'CNAME', 'NS', 'MX', 'TXT', 'SOA', 'SRV', 'PTR', 'AAAA', name='dns_record_types'), nullable=False)
-    value = Column(String(255), nullable=False)
-    target = relationship('Target', back_populates='dns_records')
+# CRUD para Vulnerability
+def create_vulnerability(db: Session, target_id: int, description: str, severity: str):
+    vulnerability = Vulnerability(target_id=target_id, description=description, severity=severity)
+    db.add(vulnerability)
+    db.commit()
+    db.refresh(vulnerability)
+    return vulnerability
+
+def get_vulnerabilities_by_target(db: Session, target_id: int):
+    return db.query(Vulnerability).filter(Vulnerability.target_id == target_id).all()
+
+def delete_vulnerability(db: Session, vulnerability_id: int):
+    vulnerability = db.query(Vulnerability).filter(Vulnerability.id == vulnerability_id).first()
+    if vulnerability:
+        db.delete(vulnerability)
+        db.commit()
