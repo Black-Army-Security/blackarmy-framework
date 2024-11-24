@@ -1,3 +1,5 @@
 psycopg2
 SQLAlchemy
-
+SQLAlchemy
+psycopg2-binary
+pyyaml
