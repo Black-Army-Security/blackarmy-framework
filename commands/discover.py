@@ -31,6 +31,9 @@ def discover(domain, wordlist):
         print(f"Error: Wordlist file '{wordlist}' not found.")
         return
 
+    # Create output files
+    domain_output_file = f"/var/tmp/domain_output_{domain}.txt"
+    subdomain_output_file = f"/var/tmp/subdomain_output_{domain}.txt"
     dns_output_file = f"/var/tmp/dns_output_{domain}.txt"
     service_output_file = f"/var/tmp/service_output_{domain}.txt"
 
@@ -47,7 +50,7 @@ def discover(domain, wordlist):
                 break
 
         if main_ip:
-            with open(dns_output_file, "w") as f:
+            with open(domain_output_file, "w") as f:
                 f.write(f"{domain}  {main_ip}\n")
                 print(f"Main domain IP resolved: {domain}  {main_ip}")
 
@@ -82,7 +85,7 @@ def discover(domain, wordlist):
         os.remove("/var/tmp/raw_output.txt")
 
         # Resolve each subdomain to IPs and format the output
-        with open(dns_output_file, "a") as final_output:
+        with open(subdomain_output_file, "a") as final_output:
             for subdomain in subdomains:
                 nslookup_command = f"nslookup {subdomain} > /var/tmp/nslookup_output.txt"
                 os.system(nslookup_command)
@@ -112,7 +115,17 @@ def discover(domain, wordlist):
                     print(f"Error: Could not open nslookup output file for {subdomain}")
                     continue
 
-        print(f"Subdomain enumeration and IP resolution completed. Results saved to {dns_output_file}")
+        print(f"Subdomain enumeration and IP resolution completed. Results saved to {subdomain_output_file}")
+
+        print("Service enum:")
+        print(service_output_file)
+        print("")
+        print("Subdomain enum:")
+        print(subdomain_output_file)
+        print ("")
+        print("DNS enum:")
+        print(dns_output_file)
+        
 
           # Run amass enumeration and log output
         print(f"Running DNS enumeration for domain: {domain}")
