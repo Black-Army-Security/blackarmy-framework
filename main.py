@@ -1,4 +1,5 @@
 import os
+import sys
 # Import ascii art
 from art.ascii_art import print_ascii_art
 # Import commands
@@ -7,6 +8,19 @@ from commands.clear import clear_screen
 from commands.help import show_help
 from commands.discover import discover
 from commands.webdiscover import webdiscover
+
+
+if os.geteuid() != 0:
+    print("""
+[ERROR] Permission Denied!
+This script requires administrative privileges to run.
+
+Please re-run the script using sudo:
+    sudo python3 main.py
+
+If you believe this is an error, ensure you have the correct permissions.
+""")
+    sys.exit(1)
 
 def show_prompt():
     print("BlackArmy> ", end="")
