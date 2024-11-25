@@ -24,6 +24,49 @@ webdiscover_scans_path = '/usr/share/blackarmy-framework/scans/webdiscover_scans
 
 blackdb_file = 'blackdb.py'
 
+# Tools to be checked
+tools = ["gobuster", "amass", "nmap", "nslookup", "wafw00f", "nikto", "dirb"]
+
+# Line to be checked in the /etc/apt/sources.list file
+kali_repo = "deb http://http.kali.org/kali kali-rolling main contrib non-free non-free-firmware"
+sourcelist_file = "/etc/apt/sources.list"
+
+# Function to check if a tool is installed
+def check_tool(tool):
+    try:
+        subprocess.run(["which", tool], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+        return True
+    except subprocess.CalledProcessError:
+        return False
+
+# Function to add the line to /etc/apt/sources.list, if necessary
+def check_sourcelist():
+    try:
+        with open(sourcelist_file, "r") as file:
+            content = file.read()
+        if kali_repo not in content:
+            with open(sourcelist_file, "a") as file:
+                file.write(f"\n{kali_repo}\n")
+            print(f"Line added to {sourcelist_file}: {kali_repo}")
+            return True
+    except PermissionError:
+        print("Permission denied. Run the script as root to modify /etc/apt/sources.list.")
+        return False
+    return True
+
+# Function to install missing tools
+def install_tools(missing_tools):
+    if missing_tools:
+        try:
+            print("Updating package list...")
+            subprocess.run(["sudo", "apt-get", "update"], check=True)
+            print(f"Installing tools: {', '.join(missing_tools)}")
+            subprocess.run(["sudo", "apt-get", "install", "-y"] + missing_tools, check=True)
+            print("Tools successfully installed.")
+        except subprocess.CalledProcessError as e:
+            print(f"Error installing tools: {e}")
+    else:
+        print("All tools are already installed.")
 
 # Check if the main directory exists
 if not os.path.exists(main_path):    
@@ -59,4 +102,12 @@ try:
 except subprocess.CalledProcessError as e:
     print(f"Error during setup: {e.stderr}")
    
+# Check tools and install missing ones
+missing_tools = [tool for tool in tools if not check_tool(tool)]
+if missing_tools:
+    print(f"Missing tools: {', '.join(missing_tools)}")
+    if check_sourcelist():
+        install_tools(missing_tools)
+else:
+    print("All tools are installed.")
 
