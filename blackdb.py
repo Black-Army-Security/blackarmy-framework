@@ -124,13 +124,31 @@ Port.services = relationship('Service', order_by=Service.id, back_populates='por
 class Vulnerability(Base):
     __tablename__ = 'vulnerabilities'
     id = Column(Integer, primary_key=True)
-    service_id = Column(Integer, ForeignKey('services.id'))
+    service_id = Column(Integer, ForeignKey('services.id'), nullable=True)
+    web_application_id = Column(Integer, ForeignKey('web_applications.id'), nullable=True)  
     vulnerability = Column(Text, nullable=False)
     severity = Column(String(50))
     cve_id = Column(String(50))
-    service = relationship('Service', back_populates='vulnerabilities')
+
+    service = relationship('Service', back_populates='vulnerabilities')  
+    web_application = relationship('WebApplication', back_populates='vulnerabilities')  
 
 Service.vulnerabilities = relationship('Vulnerability', order_by=Vulnerability.id, back_populates='service')
+
+
+class WebApplication(Base):
+    __tablename__ = 'web_applications'
+    id = Column(Integer, primary_key=True)
+    subdomain_id = Column(Integer, ForeignKey('subdomains.id'))
+    url = Column(String(255), nullable=False)  # URL da aplicação web
+    detected_waf = Column(String(255))  # Nome do WAF detectado (wafw00f)
+    nikto_scan_summary = Column(Text)  # Resumo do scan Nikto
+    created_at = Column(TIMESTAMP, nullable=False)
+    updated_at = Column(TIMESTAMP, nullable=False)
+
+    subdomain = relationship('Subdomain', back_populates='web_applications')
+
+Subdomain.web_applications = relationship('WebApplication', order_by=WebApplication.id, back_populates='subdomain')
 
 # Define the DnsRecord table
 class DnsRecord(Base):
