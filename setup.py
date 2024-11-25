@@ -22,6 +22,8 @@ scan_dir_path = '/usr/share/blackarmy-framework/scans/'
 discover_scans_path = '/usr/share/blackarmy-framework/scans/discover_scans/'
 webdiscover_scans_path = '/usr/share/blackarmy-framework/scans/webdiscover_scans/'
 
+blackdb_file = 'blackdb.py'
+
 
 # Check if the main directory exists
 if not os.path.exists(main_path):    
@@ -48,5 +50,13 @@ if not os.path.exists(discover_scans_path):
 if not os.path.exists(webdiscover_scans_path):
     os.mkdir(webdiscover_scans_path)
     print(f"Directory '{webdiscover_scans_path}' created successfully.")
+
+
+try:
+    print("Setting up the database...")
+    subprocess.run(["sudo", "python3", blackdb_file], check=True)
+    print("Database setup completed successfully.")
+except subprocess.CalledProcessError as e:
+    print(f"Error during setup: {e.stderr}")
    
 
