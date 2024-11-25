@@ -2,7 +2,7 @@ import os
 import subprocess
 from database import connection, crud, models
 
-discover_scans_path = '/usr/share/blackarmy-framework/scans/discover_scans/'
+
 # Initialize the database
 db = connection.Session()
 
@@ -37,10 +37,10 @@ def discover(domain, wordlist):
         return
 
     # Create output files
-    domain_output_file = f"{discover_scans_path}domain_output_{domain}.txt"
-    subdomain_output_file = f"{discover_scans_path}subdomain_output_{domain}.txt"
-    dns_output_file = f"{discover_scans_path}dns_output_{domain}.txt"
-    service_output_file = f"{discover_scans_path}service_output_{domain}.txt"
+    domain_output_file = f"/var/tmp/domain_output_{domain}.txt"
+    subdomain_output_file = f"/var/tmp/subdomain_output_{domain}.txt"
+    dns_output_file = f"/var/tmp/dns_output_{domain}.txt"
+    service_output_file = f"/var/tmp/service_output_{domain}.txt"
 
     # Run nslookup for the main domain and extract the IP address
     print(f"Running IP enumeration for domain: {domain}")
@@ -70,7 +70,7 @@ def discover(domain, wordlist):
     print(f"Results saved on {service_output_file}")
 
     # Run subdomain enumeration
-    subdomain_enum = f"gobuster dns -d {domain} -w {wordlist} -v > {discover_scans_path}raw_output.txt"
+    subdomain_enum = f"gobuster dns -d {domain} -w {wordlist} -v > /var/tmp/raw_output.txt"
     print(f"Running Subdomain enumeration for domain: {domain}")
     os.system(subdomain_enum)
 
@@ -79,7 +79,7 @@ def discover(domain, wordlist):
 
     try:
         # Parse raw output from Gobuster
-        with open("{discover_scans_path}raw_output.txt", "r") as raw_output:
+        with open("/var/tmp/raw_output.txt", "r") as raw_output:
             subdomains = []
             for line in raw_output:
                 if "Found:" in line:
@@ -87,16 +87,16 @@ def discover(domain, wordlist):
                     subdomains.append(subdomain)
                     print(f"Discovered subdomain: {subdomain}")
 
-        os.remove("{discover_scans_path}raw_output.txt")
+        os.remove("/var/tmp/raw_output.txt")
 
         # Resolve each subdomain to IPs and format the output
         with open(subdomain_output_file, "a") as final_output:
             for subdomain in subdomains:
-                nslookup_command = f"nslookup {subdomain} > {discover_scans_path}nslookup_output.txt"
+                nslookup_command = f"nslookup {subdomain} > /var/tmp/nslookup_output.txt"
                 os.system(nslookup_command)
 
                 try:
-                    with open("{discover_scans_path}nslookup_output.txt", "r") as nslookup_output:
+                    with open("/var/tmp/nslookup_output.txt", "r") as nslookup_output:
                         in_non_auth_section = False
                         ips = []
                         for line in nslookup_output:
@@ -108,7 +108,7 @@ def discover(domain, wordlist):
                             elif in_non_auth_section and line == "\n":
                                 break
 
-                    os.remove("{discover_scans_path}nslookup_output.txt")
+                    os.remove("/var/tmp/nslookup_output.txt")
 
                     # Write the subdomain and resolved IPs to the output file
                     final_output.write(subdomain)
