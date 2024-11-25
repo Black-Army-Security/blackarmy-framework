@@ -1,4 +1,5 @@
 import os
+import sys
 # Import ascii art
 from art.ascii_art import print_ascii_art
 # Import commands
