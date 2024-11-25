@@ -1,5 +1,10 @@
 import os
 import subprocess
+from database import connection, crud, models
+
+
+# Initialize the database
+db = connection.Session()
 
 def run_and_log_command(command, dns_output_file):
     """Run a command, log its output to a file, and display it on the screen."""
