@@ -26,16 +26,16 @@ If you believe this is an error, ensure you have the correct permissions.
     sys.exit(1)
 
 # Check if the configuration path exists
-if os.path.exists(config_path):
-    print(f"Path '{config_path}' already exists.")
-else:
-    try:
-        os.makedirs(config_path, exist_ok=True)
-        print(f"Path '{config_path}' created successfully.")
-    except PermissionError:
-        print(f"Permission denied. Please run the script as root to create the directory at '{config_path}'.")
-    except Exception as e:
-        print(f"Error creating path '{config_path}': {e}")
+# if os.path.exists(config_path):
+#     print(f"Path '{config_path}' already exists.")
+# else:
+#     try:
+#         os.makedirs(config_path, exist_ok=True)
+#         print(f"Path '{config_path}' created successfully.")
+#     except PermissionError:
+#         print(f"Permission denied. Please run the script as root to create the directory at '{config_path}'.")
+#     except Exception as e:
+#         print(f"Error creating path '{config_path}': {e}")
 
 # Function to generate a random password
 def generate_random_password(length=24):
