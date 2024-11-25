@@ -17,7 +17,7 @@ def webdiscover(target_url, wordlist):
     # Sanitize target_url to create safe filenames
     safe_target = target_url.replace("://", "_").replace("/", "_")
 
-    # Ensure the /var/tmp directory exists
+   
     webdiscover_scans_path = '/usr/share/blackarmy-framework/scans/webdiscover_scans/'
 
     # Create output directory if it doesn't exist
